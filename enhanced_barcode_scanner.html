@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Barcode Scanner - Batch Processing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .scanner-icon {
+            text-align: center;
+            font-size: 4em;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="text"], input[type="url"], input[type="file"], textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus, input[type="url"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.processing {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .batch-preview {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+
+        .batch-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .batch-item:last-child {
+            border-bottom: none;
+        }
+
+        .batch-stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .recent-scans {
+            margin-top: 30px;
+        }
+
+        .recent-scans h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .scan-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .scan-time {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .config-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .config-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .config-input {
+            margin-bottom: 15px;
+        }
+
+        .config-input input {
+            font-size: 14px;
+            padding: 10px;
+        }
+
+        .auto-submit {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .auto-submit input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .file-upload {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: border-color 0.3s ease;
+        }
+
+        .file-upload:hover {
+            border-color: #667eea;
+        }
+
+        .file-upload.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .airtable-config {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .scanner-icon {
+                font-size: 3em;
+            }
+
+            .airtable-config {
+                grid-template-columns: 1fr;
+            }
+
+            .batch-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="scanner-icon">📱</div>
+        <h1>Enhanced Barcode Scanner</h1>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('single')">Single Scan</button>
+            <button class="tab" onclick="switchTab('batch')">Batch Processing</button>
+            <button class="tab" onclick="switchTab('airtable')">Airtable Import</button>
+        </div>
+
+        <!-- Single Scan Tab -->
+        <div id="single-tab" class="tab-content active">
+            <form id="barcodeForm">
+                <div class="form-group">
+                    <label for="barcode">Scan or Enter Barcode:</label>
+                    <input type="text" id="barcode" name="barcode" placeholder="Focus here and scan barcode..." autofocus>
+                </div>
+                
+                <button type="submit" id="submitBtn">
+                    <span id="btnText">Add Product to Odoo</span>
+                    <span id="btnSpinner" style="display: none;">⏳ Processing...</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Batch Processing Tab -->
+        <div id="batch-tab" class="tab-content">
+            <div class="form-group">
+                <label for="batchInput">Enter Barcodes (one per line):</label>
+                <textarea id="batchInput" placeholder="123456789012&#10;234567890123&#10;345678901234&#10;..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Upload CSV File:</label>
+                <div class="file-upload" id="fileUpload">
+                    <input type="file" id="csvFile" accept=".csv,.txt" style="display: none;">
+                    <div>📁 Drop CSV file here or click to browse</div>
+                    <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                        Expected format: barcode column with header
+                    </div>
+                </div>
+            </div>
+
+            <div id="batchPreview" class="batch-preview" style="display: none;">
+                <h4>Batch Preview:</h4>
+                <div id="batchList"></div>
+            </div>
+
+            <div class="button-group">
+                <button type="button" id="processBatch">Process Batch</button>
+                <button type="button" id="clearBatch">Clear Batch</button>
+            </div>
+
+            <div class="batch-stats" id="batchStats" style="display: none;">
+                <div class="stat">
+                    <div class="stat-number" id="totalCount">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="successCount">0</div>
+                    <div class="stat-label">Success</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="errorCount">0</div>
+                    <div class="stat-label">Errors</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="remainingCount">0</div>
+                    <div class="stat-label">Remaining</div>
+                </div>
+            </div>
+
+            <div class="progress-bar" id="progressBar" style="display: none;">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- Airtable Import Tab -->
+        <div id="airtable-tab" class="tab-content">
+            <div class="airtable-config">
+                <div class="config-input">
+                    <label for="airtableApiKey">Airtable API Key:</label>
+                    <input type="text" id="airtableApiKey" placeholder="patXXXXXXXXXXXXXX">
+                </div>
+                <div class="config-input">
+                    <label for="airtableBaseId">Base ID:</label>
+                    <input type="text" id="airtableBaseId" placeholder="appXXXXXXXXXXXXXX">
+                </div>
+                <div class="config-input">
+                    <label for="airtableTableName">Table Name:</label>
+                    <input type="text" id="airtableTableName" placeholder="Products">
+                </div>
+                <div class="config-input">
+                    <label for="airtableBarcodeField">Barcode Field:</label>
+                    <input type="text" id="airtableBarcodeField" placeholder="Barcode" value="Barcode">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="airtableFilter">Filter Formula (optional):</label>
+                <input type="text" id="airtableFilter" placeholder="e.g., {Status} = 'Pending'">
+            </div>
+
+            <div class="button-group">
+                <button type="button" id="testAirtable">Test Connection</button>
+                <button type="button" id="importAirtable">Import from Airtable</button>
+            </div>
+
+            <div id="airtablePreview" class="batch-preview" style="display: none;">
+                <h4>Airtable Records:</h4>
+                <div id="airtableList"></div>
+            </div>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div class="recent-scans">
+            <h3>Recent Scans</h3>
+            <div id="scanHistory"></div>
+        </div>
+
+        <div class="config-section">
+            <h3>Configuration</h3>
+            
+            <div class="config-input">
+                <label for="webhookUrl">n8n Webhook URL:</label>
+                <input type="url" id="webhookUrl" placeholder="https://your-n8n-instance.com/webhook/barcode" value="https://your-n8n-instance.com/webhook/barcode">
+            </div>
+            
+            <div class="config-input">
+                <label for="batchDelay">Batch Processing Delay (ms):</label>
+                <input type="number" id="batchDelay" value="500" min="100" max="5000">
+            </div>
+            
+            <div class="auto-submit">
+                <input type="checkbox" id="autoSubmit" checked>
+                <label for="autoSubmit">Auto-submit after scanning (recommended)</label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class EnhancedBarcodeScanner {
+            constructor() {
+                this.initElements();
+                this.recentScans = JSON.parse(localStorage.getItem('recentScans') || '[]');
+                this.batchQueue = [];
+                this.batchProcessing = false;
+                this.batchStatsData = { total: 0, success: 0, error: 0, remaining: 0 };
+                this.lastScanTime = 0;
+                this.scanBuffer = '';
+                this.scanTimeout = null;
+                
+                this.init();
+            }
+
+            initElements() {
+                this.form = document.getElementById('barcodeForm');
+                this.barcodeInput = document.getElementById('barcode');
+                this.submitBtn = document.getElementById('submitBtn');
+                this.statusDiv = document.getElementById('status');
+                this.scanHistory = document.getElementById('scanHistory');
+                this.webhookUrlInput = document.getElementById('webhookUrl');
+                this.autoSubmitCheckbox = document.getElementById('autoSubmit');
+                this.batchInput = document.getElementById('batchInput');
+                this.csvFile = document.getElementById('csvFile');
+                this.fileUpload = document.getElementById('fileUpload');
+                this.batchPreview = document.getElementById('batchPreview');
+                this.batchList = document.getElementById('batchList');
+                this.processBatchBtn = document.getElementById('processBatch');
+                this.clearBatchBtn = document.getElementById('clearBatch');
+                this.batchStatsDiv = document.getElementById('batchStats');
+                this.progressBar = document.getElementById('progressBar');
+                this.progressFill = document.getElementById('progressFill');
+                this.batchDelayInput = document.getElementById('batchDelay');
+                
+                // Airtable elements
+                this.airtableApiKey = document.getElementById('airtableApiKey');
+                this.airtableBaseId = document.getElementById('airtableBaseId');
+                this.airtableTableName = document.getElementById('airtableTableName');
+                this.airtableBarcodeField = document.getElementById('airtableBarcodeField');
+                this.airtableFilter = document.getElementById('airtableFilter');
+                this.testAirtableBtn = document.getElementById('testAirtable');
+                this.importAirtableBtn = document.getElementById('importAirtable');
+                this.airtablePreview = document.getElementById('airtablePreview');
+                this.airtableList = document.getElementById('airtableList');
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.loadConfig();
+                this.renderScanHistory();
+                this.focusInput();
+            }
+
+            setupEventListeners() {
+                // Single scan functionality
+                this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+                this.barcodeInput.addEventListener('input', (e) => this.handleBarcodeInput(e));
+                this.barcodeInput.addEventListener('keypress', (e) => this.handleKeyPress(e));
+                
+                // Batch processing
+                this.batchInput.addEventListener('input', () => this.updateBatchPreview());
+                this.processBatchBtn.addEventListener('click', () => this.processBatch());
+                this.clearBatchBtn.addEventListener('click', () => this.clearBatch());
+                
+                // File upload
+                this.fileUpload.addEventListener('click', () => this.csvFile.click());
+                this.csvFile.addEventListener('change', (e) => this.handleFileUpload(e));
+                this.fileUpload.addEventListener('dragover', (e) => this.handleDragOver(e));
+                this.fileUpload.addEventListener('drop', (e) => this.handleFileDrop(e));
+                
+                // Airtable functionality
+                this.testAirtableBtn.addEventListener('click', () => this.testAirtableConnection());
+                this.importAirtableBtn.addEventListener('click', () => this.importFromAirtable());
+                
+                // Auto-focus and config
+                document.addEventListener('click', (e) => {
+                    if (e.target !== this.barcodeInput && !e.target.closest('.config-section')) {
+                        this.focusInput();
+                    }
+                });
+                
+                this.webhookUrlInput.addEventListener('change', () => this.saveConfig());
+                this.autoSubmitCheckbox.addEventListener('change', () => this.saveConfig());
+                this.batchDelayInput.addEventListener('change', () => this.saveConfig());
+                
+                // Airtable config
+                [this.airtableApiKey, this.airtableBaseId, this.airtableTableName, 
+                 this.airtableBarcodeField, this.airtableFilter].forEach(input => {
+                    input.addEventListener('change', () => this.saveConfig());
+                });
+                
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) {
+                        this.focusInput();
+                    }
+                });
+            }
+
+            handleKeyPress(e) {
+                const now = Date.now();
+                
+                if (now - this.lastScanTime < 100) {
+                    this.scanBuffer += e.key;
+                } else {
+                    this.scanBuffer = e.key;
+                }
+                
+                this.lastScanTime = now;
+                
+                if (this.scanTimeout) {
+                    clearTimeout(this.scanTimeout);
+                }
+                
+                this.scanTimeout = setTimeout(() => {
+                    if (this.scanBuffer.length > 5 && this.autoSubmitCheckbox.checked) {
+                        this.handleSubmit(new Event('submit'));
+                    }
+                }, 200);
+            }
+
+            handleBarcodeInput(e) {
+                this.hideStatus();
+                const barcode = e.target.value.trim();
+                if (barcode.length > 0 && !/^[0-9A-Za-z]+$/.test(barcode)) {
+                    this.showStatus('Please enter a valid barcode (alphanumeric)', 'error');
+                }
+            }
+
+            async handleSubmit(e) {
+                e.preventDefault();
+                const barcode = this.barcodeInput.value.trim();
+                
+                if (!barcode) {
+                    this.showStatus('Please enter a barcode', 'error');
+                    this.focusInput();
+                    return;
+                }
+                
+                if (!this.webhookUrlInput.value.trim()) {
+                    this.showStatus('Please configure the n8n webhook URL', 'error');
+                    return;
+                }
+                
+                await this.submitBarcode(barcode);
+            }
+
+            async submitBarcode(barcode) {
+                this.setLoading(true);
+                this.showStatus('Processing barcode...', 'processing');
+                
+                try {
+                    const response = await fetch(this.webhookUrlInput.value.trim(), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            barcode: barcode,
+                            timestamp: new Date().toISOString(),
+                            source: 'web_interface'
+                        })
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        this.showStatus(`✅ Product processed successfully! Barcode: ${barcode}`, 'success');
+                        this.addToHistory(barcode, 'success');
+                        this.clearInput();
+                        return true;
+                    } else {
+                        throw new Error(`Server responded with status: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    this.showStatus(`❌ Error processing barcode: ${error.message}`, 'error');
+                    this.addToHistory(barcode, 'error');
+                    return false;
+                } finally {
+                    this.setLoading(false);
+                    this.focusInput();
+                }
+            }
+
+            updateBatchPreview() {
+                const text = this.batchInput.value.trim();
+                if (!text) {
+                    this.batchPreview.style.display = 'none';
+                    this.batchQueue = [];
+                    return;
+                }
+
+                const barcodes = text.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0);
+                
+                this.batchQueue = [...new Set(barcodes)]; // Remove duplicates
+                
+                if (this.batchQueue.length === 0) {
+                    this.batchPreview.style.display = 'none';
+                    return;
+                }
+                
+                this.batchList.innerHTML = this.batchQueue.map((barcode, index) => 
+                    `<div class="batch-item">
+                        <span>${index + 1}. ${barcode}</span>
+                        <span class="scan-time">Ready</span>
+                    </div>`
+                ).join('');
+                
+                this.batchPreview.style.display = 'block';
+                
+                // Debug info
+                console.log('Batch queue updated:', this.batchQueue);
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+                this.fileUpload.classList.add('dragover');
+            }
+
+            handleFileDrop(e) {
+                e.preventDefault();
+                this.fileUpload.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    this.csvFile.files = files;
+                    this.processCSVFile(files[0]);
+                }
+            }
+
+            handleFileUpload(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    this.processCSVFile(file);
+                }
+            }
+
+            processCSVFile(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n').filter(line => line.trim());
+                    
+                    if (lines.length < 2) {
+                        this.showStatus('CSV file must have at least a header and one data row', 'error');
+                        return;
+                    }
+                    
+                    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                    const barcodeColumnIndex = headers.findIndex(h => 
+                        h.toLowerCase().includes('barcode') || h.toLowerCase().includes('code')
+                    );
+                    
+                    if (barcodeColumnIndex === -1) {
+                        this.showStatus('Could not find barcode column. Please ensure your CSV has a column with "barcode" or "code" in the name.', 'error');
+                        return;
+                    }
+                    
+                    const barcodes = lines.slice(1).map(line => {
+                        const columns = line.split(',').map(c => c.trim().replace(/"/g, ''));
+                        return columns[barcodeColumnIndex];
+                    }).filter(barcode => barcode && barcode.trim());
+                    
+                    this.batchInput.value = barcodes.join('\n');
+                    this.updateBatchPreview();
+                    this.showStatus(`Loaded ${barcodes.length} barcodes from CSV`, 'success');
+                };
+                reader.readAsText(file);
+            }
+
+            async processBatch() {
+                if (this.batchQueue.length === 0) {
+                    this.showStatus('No barcodes to process', 'error');
+                    return;
+                }
+
+                if (this.batchProcessing) {
+                    this.showStatus('Batch processing already in progress', 'error');
+                    return;
+                }
+
+                this.batchProcessing = true;
+                this.processBatchBtn.disabled = true;
+                this.processBatchBtn.textContent = 'Processing...';
+                
+                this.batchStatsDiv.style.display = 'flex';
+                this.progressBar.style.display = 'block';
+                
+                // Initialize stats
+                this.batchStatsData = {
+                    total: this.batchQueue.length,
+                    success: 0,
+                    error: 0,
+                    remaining: this.batchQueue.length
+                };
+                this.updateBatchStats();
+                
+                const delay = parseInt(this.batchDelayInput.value) || 500;
+                
+                for (let i = 0; i < this.batchQueue.length; i++) {
+                    const barcode = this.batchQueue[i];
+                    const success = await this.submitBarcode(barcode);
+                    
+                    if (success) {
+                        this.batchStatsData.success++;
+                    } else {
+                        this.batchStatsData.error++;
+                    }
+                    
+                    this.batchStatsData.remaining--;
+                    this.updateBatchStats();
+                    this.updateProgress((i + 1) / this.batchQueue.length * 100);
+                    
+                    // Update batch preview
+                    const batchItem = this.batchList.children[i];
+                    if (batchItem) {
+                        const statusSpan = batchItem.querySelector('.scan-time');
+                        statusSpan.textContent = success ? '✅ Success' : '❌ Error';
+                        statusSpan.style.color = success ? 'green' : 'red';
+                    }
+                    
+                    // Delay between requests
+                    if (i < this.batchQueue.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                }
+                
+                this.batchProcessing = false;
+                this.processBatchBtn.disabled = false;
+                this.processBatchBtn.textContent = 'Process Batch';
+                
+                this.showStatus(
+                    `Batch processing complete! ${this.batchStatsData.success} successful, ${this.batchStatsData.error} errors`, 
+                    this.batchStatsData.error === 0 ? 'success' : 'error'
+                );
+            }
+
+            updateBatchStats() {
+                document.getElementById('totalCount').textContent = this.batchStatsData.total;
+                document.getElementById('successCount').textContent = this.batchStatsData.success;
+                document.getElementById('errorCount').textContent = this.batchStatsData.error;
+                document.getElementById('remainingCount').textContent = this.batchStatsData.remaining;
+            }
+
+            updateProgress(percentage) {
+                this.progressFill.style.width = percentage + '%';
+            }
+
+            clearBatch() {
+                this.batchInput.value = '';
+                this.batchQueue = [];
+                this.batchPreview.style.display = 'none';
+                this.batchStatsDiv.style.display = 'none';
+                this.progressBar.style.display = 'none';
+                this.csvFile.value = '';
+                this.hideStatus();
+            }
+
+            async testAirtableConnection() {
+                const apiKey = this.airtableApiKey.value.trim();
+                const baseId = this.airtableBaseId.value.trim();
+                const tableName = this.airtableTableName.value.trim();
+                
+                if (!apiKey || !baseId || !tableName) {
+                    this.showStatus('Please fill in all Airtable configuration fields', 'error');
+                    return;
+                }
+                
+                this.testAirtableBtn.disabled = true;
+                this.testAirtableBtn.textContent = 'Testing...';
+                
+                try {
+                    const response = await fetch(`https://api.airtable.com/v0/${baseId}/${tableName}?maxRecords=1`, {
+                        headers: {
+                            'Authorization': `Bearer ${apiKey}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        this.showStatus('✅ Airtable connection successful!', 'success');
+                    } else {
+                        throw new Error(`Connection failed: ${response.status} ${response.statusText}`);
+                    }
+                } catch (error) {
+                    console.error('Airtable test error:', error);
+                    this.showStatus(`❌ Airtable connection failed: ${error.message}`, 'error');
+                } finally {
+                    this.testAirtableBtn.disabled = false;
+                    this.testAirtableBtn.textContent = 'Test Connection';
+                }
+            }
+
+            async importFromAirtable() {
+                const apiKey = this.airtableApiKey.value.trim();
+                const baseId = this.airtableBaseId.value.trim();
+                const tableName = this.airtableTableName.value.trim();
+                const barcodeField = this.airtableBarcodeField.value.trim() || 'Barcode';
+                const filter = this.airtableFilter.value.trim();
+                
+                if (!apiKey || !baseId || !tableName) {
+                    this.showStatus('Please fill in all required Airtable configuration fields', 'error');
+                    return;
+                }
+                
+                this.importAirtableBtn.disabled = true;
+                this.importAirtableBtn.textContent = 'Importing...';
+                
+                try {
+                    let url = `https://api.airtable.com/v0/${baseId}/${tableName}`;
+                    if (filter) {
+                        url += `?filterByFormula=${encodeURIComponent(filter)}`;
+                    }
+                    
+                    const response = await fetch(url, {
+                        headers: {
+                            'Authorization': `Bearer ${apiKey}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    const records = data.records || [];
+                    
+                    if (records.length === 0) {
+                        this.showStatus('No records found in Airtable with the given criteria', 'error');
+                        return;
+                    }
+                    
+                    // Extract barcodes from records
+                    const barcodes = records
+                        .map(record => record.fields[barcodeField])
+                        .filter(barcode => barcode && barcode.trim())
+                        .map(barcode => barcode.trim());
+                    
+                    if (barcodes.length === 0) {
+                        this.showStatus(`No valid barcodes found in field '${barcodeField}'`, 'error');
+                        return;
+                    }
+                    
+                    // Remove duplicates
+                    const uniqueBarcodes = [...new Set(barcodes)];
+                    
+                    // Display preview
+                    this.airtableList.innerHTML = uniqueBarcodes.map((barcode, index) => 
+                        `<div class="batch-item">
+                            <span>${index + 1}. ${barcode}</span>
+                            <span class="scan-time">From Airtable</span>
+                        </div>`
+                    ).join('');
+                    
+                    this.airtablePreview.style.display = 'block';
+                    
+                    // Load into batch processing
+                    this.batchInput.value = uniqueBarcodes.join('\n');
+                    this.updateBatchPreview();
+                    
+                    // Switch to batch tab
+                    switchTab('batch');
+                    
+                    this.showStatus(`✅ Imported ${uniqueBarcodes.length} unique barcodes from Airtable`, 'success');
+                    
+                } catch (error) {
+                    console.error('Airtable import error:', error);
+                    this.showStatus(`❌ Import failed: ${error.message}`, 'error');
+                } finally {
+                    this.importAirtableBtn.disabled = false;
+                    this.importAirtableBtn.textContent = 'Import from Airtable';
+                }
+            }
+
+            addToHistory(barcode, status) {
+                const scan = {
+                    barcode,
+                    timestamp: new Date().toISOString(),
+                    status
+                };
+                
+                this.recentScans.unshift(scan);
+                this.recentScans = this.recentScans.slice(0, 20); // Keep last 20
+                
+                localStorage.setItem('recentScans', JSON.stringify(this.recentScans));
+                this.renderScanHistory();
+            }
+
+            renderScanHistory() {
+                if (this.recentScans.length === 0) {
+                    this.scanHistory.innerHTML = '<p style="color: #666; text-align: center;">No recent scans</p>';
+                    return;
+                }
+                
+                this.scanHistory.innerHTML = this.recentScans.map(scan => {
+                    const time = new Date(scan.timestamp).toLocaleTimeString();
+                    const statusIcon = scan.status === 'success' ? '✅' : '❌';
+                    
+                    return `
+                        <div class="scan-item">
+                            <span>${statusIcon} ${scan.barcode}</span>
+                            <span class="scan-time">${time}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            showStatus(message, type) {
+                this.statusDiv.textContent = message;
+                this.statusDiv.className = `status ${type}`;
+                this.statusDiv.style.display = 'block';
+                
+                if (type === 'success') {
+                    setTimeout(() => this.hideStatus(), 5000);
+                }
+            }
+
+            hideStatus() {
+                this.statusDiv.style.display = 'none';
+            }
+
+            setLoading(loading) {
+                this.submitBtn.disabled = loading;
+                document.getElementById('btnText').style.display = loading ? 'none' : 'inline';
+                document.getElementById('btnSpinner').style.display = loading ? 'inline' : 'none';
+            }
+
+            clearInput() {
+                this.barcodeInput.value = '';
+                this.scanBuffer = '';
+            }
+
+            focusInput() {
+                setTimeout(() => {
+                    if (document.querySelector('.tab-content.active').id === 'single-tab') {
+                        this.barcodeInput.focus();
+                    }
+                }, 100);
+            }
+
+            saveConfig() {
+                const config = {
+                    webhookUrl: this.webhookUrlInput.value.trim(),
+                    autoSubmit: this.autoSubmitCheckbox.checked,
+                    batchDelay: parseInt(this.batchDelayInput.value) || 500,
+                    airtable: {
+                        apiKey: this.airtableApiKey.value.trim(),
+                        baseId: this.airtableBaseId.value.trim(),
+                        tableName: this.airtableTableName.value.trim(),
+                        barcodeField: this.airtableBarcodeField.value.trim(),
+                        filter: this.airtableFilter.value.trim()
+                    }
+                };
+                localStorage.setItem('scannerConfig', JSON.stringify(config));
+            }
+
+            loadConfig() {
+                const config = JSON.parse(localStorage.getItem('scannerConfig') || '{}');
+                
+                if (config.webhookUrl) {
+                    this.webhookUrlInput.value = config.webhookUrl;
+                }
+                
+                if (config.autoSubmit !== undefined) {
+                    this.autoSubmitCheckbox.checked = config.autoSubmit;
+                }
+                
+                if (config.batchDelay) {
+                    this.batchDelayInput.value = config.batchDelay;
+                }
+                
+                if (config.airtable) {
+                    this.airtableApiKey.value = config.airtable.apiKey || '';
+                    this.airtableBaseId.value = config.airtable.baseId || '';
+                    this.airtableTableName.value = config.airtable.tableName || '';
+                    this.airtableBarcodeField.value = config.airtable.barcodeField || 'Barcode';
+                    this.airtableFilter.value = config.airtable.filter || '';
+                }
+            }
+        }
+
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to selected tab and content
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Focus input if single tab is active
+            if (tabName === 'single') {
+                setTimeout(() => document.getElementById('barcode').focus(), 100);
+            }
+        }
+
+        // Initialize the scanner when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new EnhancedBarcodeScanner();
+        });
+
+        // Prevent form submission on page refresh
+        window.addEventListener('beforeunload', () => {
+            document.getElementById('barcode').value = '';
+        });
+    </script>
+</body>
+</html>
