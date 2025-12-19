@@ -57,7 +57,7 @@ export default function PriceApproval() {
         setComparisons(data.comparisons);
         setSummary(data.summary);
         // Auto-select all non-matching items
-        const autoSelect = new Set(
+        const autoSelect = new Set<string>(
           data.comparisons
             .filter((c: PriceComparison) => c.status !== 'match' && c.status !== 'not_found_in_odoo')
             .map((c: PriceComparison) => c.barcode)

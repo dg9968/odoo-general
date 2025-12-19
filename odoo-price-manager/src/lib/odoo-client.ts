@@ -92,7 +92,7 @@ export class OdooPriceUpdater {
       }
 
       // For execute_kw, params should be passed as an array of arguments, not spread
-      const args = [this.config.db, this.uid, this.config.password, model, method].concat(params);
+      const args = [this.config.db, this.uid, this.config.password, model, method, ...params];
       logger.info(`Calling ${model}.${method} with params:`, params);
       logger.info(`Params length:`, params.length);
       logger.info(`First param:`, params[0]);
