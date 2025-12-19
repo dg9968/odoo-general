@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     // Get all products from Odoo using search_read
     // execute_kw expects args as: [[domain, fields]] for search_read
-    const odooProducts = await (updater as any).callObject('product.template', 'search_read', [
+    const odooProducts = await updater.callObject('product.template', 'search_read', [
       [[], ['id', 'name', 'barcode', 'list_price', 'default_code']]  // [domain, fields] wrapped for execute_kw
     ]) as Array<{
       id: number;

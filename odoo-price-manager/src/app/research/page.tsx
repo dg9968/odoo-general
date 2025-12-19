@@ -329,7 +329,16 @@ export default function ResearchPage() {
                             <div>
                               <p className="text-sm text-gray-400 mb-2">Available at</p>
                               <div className="space-y-2">
-                                {stores.map((store: any, idx: number) => (
+                                {stores.map((store: {
+                                  name: string;
+                                  link?: string;
+                                  price?: string;
+                                  sale_price?: string;
+                                  currency_symbol?: string;
+                                  availability?: string;
+                                  condition?: string;
+                                  shipping?: string;
+                                }, idx: number) => (
                                   <div key={idx} className="bg-gray-700 rounded p-3 space-y-1">
                                     <div className="flex justify-between items-start">
                                       <span className="font-medium text-white">{store.name}</span>
@@ -378,7 +387,7 @@ export default function ResearchPage() {
                               </div>
                             </div>
                           );
-                        } catch (e) {
+                        } catch {
                           return null;
                         }
                       })()}

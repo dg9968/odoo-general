@@ -159,15 +159,6 @@ export default function PriceApproval() {
     }
   };
 
-  const getStatusBgColor = (status: string) => {
-    switch (status) {
-      case 'match': return 'bg-green-50 border-green-200';
-      case 'increase': return 'bg-blue-50 border-blue-200';
-      case 'decrease': return 'bg-orange-50 border-orange-200';
-      case 'not_found_in_odoo': return 'bg-red-50 border-red-200';
-      default: return 'bg-gray-50 border-gray-200';
-    }
-  };
 
   const formatStatus = (status: string) => {
     switch (status) {

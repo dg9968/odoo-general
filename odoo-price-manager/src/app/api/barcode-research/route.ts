@@ -53,8 +53,8 @@ export async function POST(request: NextRequest) {
     // Note: Airtable attachments need specific format: { url: string }
     const imageAttachments = productData.images?.map(url => ({ url })) || [];
 
-    // Build record without researchedAt - let Airtable use "Created time" field instead
-    const record: any = {
+    // Build record for Airtable
+    const record: ProductResearchRecord = {
       barcode: productData.barcode_number,
       productName: productData.product_name || productData.title,
       brand: productData.brand,
@@ -72,10 +72,8 @@ export async function POST(request: NextRequest) {
       features: productData.features?.join('\n') || '',
       // Store detailed pricing data as JSON string
       storePricing: productData.stores ? JSON.stringify(productData.stores) : '',
+      researchedAt: new Date().toISOString(),
     };
-
-    // Add researchedAt for display purposes (not sent to Airtable)
-    record.researchedAt = new Date().toISOString();
 
     // Save to Airtable if requested
     let savedRecord = null;

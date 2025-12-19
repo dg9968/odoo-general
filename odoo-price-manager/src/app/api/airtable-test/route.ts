@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import logger from '@/lib/logger';
 
 // Test endpoint to verify Airtable configuration
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Support both new token name and legacy API key name
     const accessToken = process.env.AIRTABLE_ACCESS_TOKEN || process.env.AIRTABLE_API_KEY;

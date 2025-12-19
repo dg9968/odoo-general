@@ -74,6 +74,7 @@ export class AirtableClient {
 
       // Remove researchedAt and researchedBy from the record sent to Airtable
       // Use Airtable's "Created time" field instead
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { researchedAt, researchedBy, ...airtableFields } = record;
 
       const result = await this.makeRequest('', 'POST', {

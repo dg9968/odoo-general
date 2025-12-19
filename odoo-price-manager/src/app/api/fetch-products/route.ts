@@ -3,7 +3,7 @@ import { ConfigManager } from '@/lib/config';
 import { OdooPriceUpdater } from '@/lib/odoo-client';
 import logger from '@/lib/logger';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const configManager = new ConfigManager();
     const updater = new OdooPriceUpdater(configManager.getConfig());
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     // Get all products using search_read
     // execute_kw expects args as: [[domain, fields]] for search_read
-    const products = await (updater as any).callObject('product.template', 'search_read', [
+    const products = await updater.callObject('product.template', 'search_read', [
       [[], ['id', 'name', 'barcode', 'list_price', 'default_code', 'categ_id']]  // [domain, fields] wrapped for execute_kw
     ]) as Array<{
       id: number;

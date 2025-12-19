@@ -84,7 +84,7 @@ export class OdooPriceUpdater {
     });
   }
 
-  private callObject(model: string, method: string, params: unknown[]): Promise<unknown> {
+  public callObject(model: string, method: string, params: unknown[]): Promise<unknown> {
     return new Promise((resolve, reject) => {
       if (!this.objectClient || !this.uid) {
         reject(new Error('Object client not initialized or not authenticated'));
